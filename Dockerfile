@@ -1,20 +1,18 @@
-# Usa uma imagem do docker hub com a versão carbon do Node.js
-FROM node:carbon
+FROM keymetrics/pm2:latest-alpine
 
-# Define qual diretório será usado para nossa aplicação dentro do container
-WORKDIR /usr/src/app
+# Bundle APP files
+COPY src src/
+COPY package.json .
+COPY ecosystem.config.js .
 
-# Copia todos os arquivos que começam com package e tem extensão .json para o diretório definido acima
-COPY package*.json ./
+# Install app dependencies
+ENV NPM_CONFIG_LOGLEVEL warn
+RUN npm install --production
 
-# Instala todas as dependências declaradas no package.json
-RUN npm install
-
-# Copia todos os arquivos da raiz da nossa aplicação para a pasta deinida no WORKDIR
-COPY . .
-
-# Expõe a porta 3000 do container
+# Expose the listening port of your app
 EXPOSE 3003
 
-# Roda o comando 'npm start'
-CMD [ "npm", "run", "production" ]
+# Show current folder structure in logs
+RUN ls -al -R
+
+CMD [ "pm2-runtime", "start", "ecosystem.config.js" ]
